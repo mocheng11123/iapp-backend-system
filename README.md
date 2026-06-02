@@ -30,31 +30,49 @@
 
 ### 1. 环境要求
 
-- Docker & Docker Compose
+- Docker & Docker Compose（推荐）
 - 或本地环境：Python 3.11+, PostgreSQL 15+, Redis 7+
 
-### 2. Docker 部署（推荐）
+### 2. Docker 部署（推荐，一键启动）
 
 ```bash
 # 克隆项目
-git clone https://github.com/your-org/app-backend-system.git
-cd app-backend-system
+git clone https://github.com/mocheng11123/iapp-backend-system.git
+cd iapp-backend-system
 
-# 修改环境变量
-cp .env.example .env
-# 编辑 .env 文件，设置 JWT_SECRET_KEY
+# 方式一：使用自动部署脚本
+chmod +x deploy.sh
+./deploy.sh
 
-# 启动所有服务
+# 方式二：手动启动
 docker-compose up -d
-
-# 查看日志
-docker-compose logs -f backend
 ```
 
 服务启动后：
-- API 服务：http://localhost:8000
-- API 文档：http://localhost:8000/docs
-- Nginx 代理：http://localhost:80
+- **API 文档**：http://localhost/docs
+- **API 服务**：http://localhost:8000
+- **Nginx 代理**：http://localhost:80
+- **PostgreSQL**：localhost:5432
+- **Redis**：localhost:6379
+
+**环境变量说明**：
+- `docker-compose.yml` 已经配置了默认值，可以直接运行
+- `JWT_SECRET_KEY` 建议使用随机生成的密钥
+- 数据库密码等敏感信息已通过 Docker 环境变量配置
+
+```bash
+# 查看服务状态
+docker-compose ps
+
+# 查看日志
+docker-compose logs -f backend
+
+# 停止服务
+docker-compose down
+
+# 重启服务
+docker-compose restart
+```
 
 ### 3. 本地开发
 
