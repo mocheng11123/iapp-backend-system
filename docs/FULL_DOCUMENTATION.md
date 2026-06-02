@@ -243,7 +243,7 @@
 
 ### 七、快速开始
 
-#### 1. Docker 部署
+#### 1. Docker 部署（完整服务）
 
 ```bash
 # 克隆项目
@@ -263,11 +263,13 @@ docker-compose logs -f
 
 服务端口：
 - API + Nginx: http://localhost:80
+- Web 控制台：http://localhost:3000（开发模式）或 80（生产模式）
 - PostgreSQL: 5432
 - Redis: 6379
 
 #### 2. 本地开发
 
+**后端**：
 ```bash
 cd backend
 pip install -r requirements.txt
@@ -281,13 +283,77 @@ alembic upgrade head
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
+**前端**：
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+访问 http://localhost:3000 登录管理后台。
+
+#### 3. API 文档
+
+启动后端后访问：
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
 ---
 
-### 八、API 文档
+### 八、Web 管理控制台
 
-启动服务后访问：
-- Swagger UI: http://localhost/docs
-- ReDoc: http://localhost/redoc
+#### 功能模块
+
+| 模块 | 功能 | 状态 |
+|------|------|------|
+| 仪表盘 | 数据总览、趋势图表、余额管理 | ✅ 已实现 |
+| 应用管理 | 创建/配置/删除应用 | ✅ 已实现 |
+| 卡密管理 | 批次创建、导出、吊销 | ✅ 已实现 |
+| 终端用户 | 列表、搜索、禁用 | 🚧 待完善 |
+| 公告管理 | 富文本编辑、发布/下架 | 🚧 待完善 |
+| 版本管理 | 版本发布、强制更新 | 🚧 待完善 |
+| 启动图 | 图片上传、平台配置 | 🚧 待完善 |
+| 广告位 | 广告配置、权重管理 | 🚧 待完善 |
+| 论坛管理 | 版块/帖子管理 | 🚧 待完善 |
+| 反馈管理 | 查看/回复/状态跟踪 | 🚧 待完善 |
+| 账单管理 | 流水查询、充值 | 🚧 待完善 |
+| 系统设置 | Webhook、邮箱配置 | 🚧 待完善 |
+
+#### 界面预览
+
+**登录页**：
+- 邮箱密码登录
+- API 文档链接
+- 注册入口
+
+**仪表盘**：
+- 4 个统计卡片（应用总数、终端用户、今日 API 调用、今日消费）
+- 余额信息和充值入口
+- 费用预估（今日/本月/可用天数）
+- 7 天 API 调用趋势图
+
+**应用管理**：
+- 应用列表表格
+- 新建应用弹窗
+- API Key 显示（创建时一次性）
+- 配置和删除操作
+
+**卡密管理**：
+- 批次列表（名称、类型、数量、价格）
+- 新建批次表单（额度/会员、数量、面值/天数）
+- 导出 CSV
+- 吊销操作
+
+#### 技术架构
+
+```
+Vue 3 + Vite
+├── Element Plus (UI)
+├── Pinia (状态管理)
+├── Vue Router (路由)
+├── Axios (HTTP)
+└── 原生 CSS（图表）
+```
 
 ---
 
