@@ -60,7 +60,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: app_backend_celery
-    command: celery -A app.core.celery_app worker --loglevel=info
+    command: >
+      sh -c "sleep 15 && celery -A app.core.celery_app worker --loglevel=info"
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@postgres:5432/app_backend
       REDIS_URL: redis://redis:6379/0
@@ -70,6 +71,8 @@ services:
     depends_on:
       - postgres
       - redis
+    profiles:
+      - optional  # 默认不启动，需要时手动启动
     restart: unless-stopped
 
   # Nginx 反向代理
