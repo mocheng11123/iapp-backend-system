@@ -1,6 +1,10 @@
 """数据库模型定义"""
 from sqlalchemy import Column, String, Text, Boolean, SmallInteger, DECIMAL, ForeignKey, Index, UniqueConstraint
-from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, INET, JSON, BIGSERIAL
+from sqlalchemy.dialects.postgresql import UUID, TIMESTAMP, INET, JSON
+from sqlalchemy import BigInteger
+
+# SQLAlchemy 2.0 兼容：BIGSERIAL 别名
+BIGSERIAL = BigInteger
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.core.database import Base
