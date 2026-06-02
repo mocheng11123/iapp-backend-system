@@ -1,16 +1,22 @@
-# App 后台管理系统
+# App 后台管理系统 (iApp 增强版)
 
-为 App 开发者提供开箱即用的后台 API 系统。
+为 iApp 开发者提供开箱即用的后台 API 系统，融合通用 App 后台架构与 iApp 生态特色功能。
 
 ## 功能特性
 
+### 核心功能
 - **开发者管理**：注册/登录/余额/套餐
 - **多应用管理**：每个开发者可创建多个 App
 - **终端用户管理**：App 的最终用户，可自主登录
 - **双层余额系统**：开发者余额 + 终端用户余额
 - **API 按量计费**：支持按次、阶梯计费
 - **Webhook 事件推送**：实时同步数据
-- **Web 管理控制台**：Vue3 + Element Plus
+
+### iApp 特色功能
+- **卡密系统**：支持额度卡密、会员卡密，开发者自定义
+- **远程管理**：公告、强制更新、启动图/广告远程配置
+- **社区运营**：论坛、反馈系统，反馈邮件通知
+- **混合商业模式**：开发者付费套餐 + 终端用户卡密分成
 
 ## 技术栈
 
@@ -118,7 +124,39 @@ app-backend-system/
 | /dev/apps/{app_id} | GET | 应用详情 |
 | /dev/apps/{app_id}/rotate-key | POST | 轮换 API Key |
 
-### 终端用户管理
+### 卡密系统（iApp 特色）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| /dev/card/batches | POST | 创建卡密批次 |
+| /dev/card/batches | GET | 批次列表 |
+| /dev/card/batches/{id}/cards | GET | 导出卡密 CSV |
+| /api/v1/card/redeem | POST | 终端用户兑换 |
+| /api/v1/users/me/membership | GET | 查询会员信息 |
+
+### 远程管理（iApp 特色）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| /dev/announcements | POST/GET | 公告管理 |
+| /api/v1/announcements | GET | 获取生效公告 |
+| /dev/versions | POST/GET | 版本管理 |
+| /api/v1/version/latest | GET | 检查版本更新 |
+| /dev/splash | POST/GET | 启动图配置 |
+| /api/v1/splash/current | GET | 获取当前启动图 |
+| /dev/ads | POST/GET | 广告配置 |
+| /api/v1/ads/{slot} | GET | 获取广告内容 |
+
+### 社区运营（iApp 特色）
+
+| 接口 | 方法 | 说明 |
+|------|------|------|
+| /dev/forum/boards | POST/GET | 版块管理 |
+| /api/v1/forum/posts | POST/GET | 发布/查看帖子 |
+| /api/v1/forum/{id}/replies | POST/GET | 回复帖子 |
+| /api/v1/feedback | POST | 提交反馈 |
+| /dev/feedback | GET | 反馈列表 |
+| /dev/feedback/{id}/status | PUT | 更新反馈状态 |
 
 | 接口 | 方法 | 说明 |
 |------|------|------|

@@ -233,3 +233,277 @@ class Plan(Base):
     login_price = Column(DECIMAL(10, 6), default=0.005)
     is_deleted = Column(Boolean, default=False)
     created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+
+
+# ============ iApp 特色功能模型 ============
+
+class CardBatch(Base):
+    """卡密批次表"""
+    __tablename__ = "card_batches"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    app_id = Column(UUID(as_uuid=True), ForeignKey("apps.id"), nullable=False)
+    name = Column(String(100), nullable=False)
+    type = Column(SmallInteger, nullable=False, comment="1=额度卡密，2=会员卡密")
+    amount = Column(DECIMAL(16, 2), nullable=True, comment="额度卡密面值")
+    duration_days = Column(BIGSERIAL, nullable=True, comment="会员有效天数")
+    total_quantity = Column(BIGSERIAL, nullable=False)
+    remaining_quantity = Column(BIGSERIAL, nullable=False)
+    price_per_card = Column(DECIMAL(10, 4), nullable=False, comment="开发者购买单价")
+    total_price = Column(DECIMAL(16, 2), nullable=False, comment="总价格")
+    status = Column(SmallInteger, default=0, comment="0=正常，1=已吊销")
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    app = relationship("App", back_populates="card_batches")
+    cards = relationship("Card", back_populates="batch", cascade="all, delete-orphan")
+    
+    __table_args__ = (
+        Index("idx_card_batches_app_id", "app_id"),
+        Index("idx_card_batches_status", "status"),
+    )
+
+
+class Card(Base):
+    """卡密表"""
+    __tablename__ = "cards"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    batch_id = Column(UUID(as_uuid=True), ForeignKey("card_batches.id"), nullable=False)
+    code = Column(String(64), unique=True, nullable=False, comment="卡密码")
+    status = Column(SmallInteger, default=0, comment="0=未使用，1=已使用，2=已吊销")
+    used_by_user_id = Column(UUID(as_uuid=True), ForeignKey("end_users.id"), nullable=True)
+    used_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    
+    batch = relationship("CardBatch", back_populates="cards")
+    used_by_user = relationship("EndUser")
+    
+    __table_args__ = (
+        Index("idx_cards_batch_id", "batch_id"),
+        Index("idx_cards_code", "code"),
+        Index("idx_cards_status", "status"),
+    )
+
+
+class UserMembership(Base):
+    """终端会员表"""
+    __tablename__ = "user_memberships"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("end_users.id"), unique=True, nullable=False)
+    level = Column(String(50), default="vip", comment="会员等级")
+    expire_at = Column(TIMESTAMP, nullable=True, comment="到期时间，NULL 表示永久")
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    user = relationship("EndUser", back_populates="membership")
+
+
+class Announcement(Base):
+    """公告表"""
+    __tablename__ = "announcements"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    app_id = Column(UUID(as_uuid=True), ForeignKey("apps.id"), nullable=False)
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    is_sticky = Column(Boolean, default=False, comment="置顶")
+    start_at = Column(TIMESTAMP, nullable=True)
+    end_at = Column(TIMESTAMP, nullable=True)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    app = relationship("App", back_populates="announcements")
+    
+    __table_args__ = (
+        Index("idx_announcements_app_time", "app_id", "start_at", "end_at"),
+    )
+
+
+class AppVersion(Base):
+    """版本表"""
+    __tablename__ = "app_versions"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    app_id = Column(UUID(as_uuid=True), ForeignKey("apps.id"), nullable=False)
+    version_code = Column(BIGSERIAL, nullable=False, comment="内部版本号")
+    version_name = Column(String(50), nullable=False, comment="展示版本号")
+    update_log = Column(Text, nullable=True)
+    download_url = Column(String(500), nullable=False)
+    file_md5 = Column(String(32), nullable=True)
+    force_update = Column(Boolean, default=False)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    
+    app = relationship("App", back_populates="versions")
+    
+    __table_args__ = (
+        Index("idx_app_versions_app_code", "app_id", "version_code"),
+    )
+
+
+class SplashConfig(Base):
+    """启动图表"""
+    __tablename__ = "splash_configs"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    app_id = Column(UUID(as_uuid=True), ForeignKey("apps.id"), nullable=False)
+    image_url = Column(String(500), nullable=False)
+    platform = Column(String(10), default="all", comment="android/ios/all")
+    start_at = Column(TIMESTAMP, nullable=True)
+    end_at = Column(TIMESTAMP, nullable=True)
+    priority = Column(BIGSERIAL, default=0, comment="越大越优先")
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    
+    app = relationship("App", back_populates="splash_configs")
+    
+    __table_args__ = (
+        Index("idx_splash_app_time", "app_id", "start_at", "end_at"),
+    )
+
+
+class Ad(Base):
+    """广告表"""
+    __tablename__ = "ads"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    app_id = Column(UUID(as_uuid=True), ForeignKey("apps.id"), nullable=False)
+    slot = Column(String(50), nullable=False, comment="广告位标识")
+    type = Column(String(20), default="image", comment="image/video")
+    media_url = Column(String(500), nullable=False)
+    target_url = Column(String(500), nullable=True)
+    weight = Column(BIGSERIAL, default=0, comment="权重")
+    status = Column(SmallInteger, default=1, comment="0=禁用，1=启用")
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    app = relationship("App", back_populates="ads")
+    
+    __table_args__ = (
+        Index("idx_ads_app_slot", "app_id", "slot"),
+    )
+
+
+class ForumBoard(Base):
+    """论坛版块表"""
+    __tablename__ = "forum_boards"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    app_id = Column(UUID(as_uuid=True), ForeignKey("apps.id"), nullable=False)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    sort_order = Column(BIGSERIAL, default=0)
+    status = Column(SmallInteger, default=1, comment="0=关闭，1=开放")
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    
+    app = relationship("App", back_populates="forum_boards")
+    posts = relationship("ForumPost", back_populates="board", cascade="all, delete-orphan")
+    
+    __table_args__ = (
+        Index("idx_forum_boards_app_id", "app_id"),
+    )
+
+
+class ForumPost(Base):
+    """论坛帖子表"""
+    __tablename__ = "forum_posts"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    board_id = Column(UUID(as_uuid=True), ForeignKey("forum_boards.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("end_users.id"), nullable=False)
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    view_count = Column(BIGSERIAL, default=0)
+    reply_count = Column(BIGSERIAL, default=0)
+    is_sticky = Column(Boolean, default=False)
+    is_essence = Column(Boolean, default=False)
+    status = Column(SmallInteger, default=0, comment="0=正常，1=已删除")
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    board = relationship("ForumBoard", back_populates="posts")
+    user = relationship("EndUser", back_populates="forum_posts")
+    replies = relationship("ForumReply", back_populates="post", cascade="all, delete-orphan")
+    
+    __table_args__ = (
+        Index("idx_forum_posts_board", "board_id"),
+        Index("idx_forum_posts_user", "user_id"),
+        Index("idx_forum_posts_status", "status"),
+    )
+
+
+class ForumReply(Base):
+    """论坛回复表"""
+    __tablename__ = "forum_replies"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    post_id = Column(UUID(as_uuid=True), ForeignKey("forum_posts.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("end_users.id"), nullable=False)
+    content = Column(Text, nullable=False)
+    reply_to_id = Column(UUID(as_uuid=True), nullable=True, comment="引用回复的 ID")
+    status = Column(SmallInteger, default=0)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    
+    post = relationship("ForumPost", back_populates="replies")
+    user = relationship("EndUser", back_populates="forum_replies")
+    
+    __table_args__ = (
+        Index("idx_forum_replies_post", "post_id"),
+    )
+
+
+class Feedback(Base):
+    """反馈表"""
+    __tablename__ = "feedbacks"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    app_id = Column(UUID(as_uuid=True), ForeignKey("apps.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("end_users.id"), nullable=False)
+    title = Column(String(200), nullable=False)
+    content = Column(Text, nullable=False)
+    images = Column(JSON, default=list, comment="图片 URL 列表")
+    status = Column(SmallInteger, default=0, comment="0=待处理，1=已读，2=已解决，3=已忽略")
+    reply_content = Column(Text, nullable=True)
+    replied_at = Column(TIMESTAMP, nullable=True)
+    email_sent = Column(Boolean, default=False)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    updated_at = Column(TIMESTAMP, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    app = relationship("App", back_populates="feedbacks")
+    user = relationship("EndUser", back_populates="feedbacks")
+    
+    __table_args__ = (
+        Index("idx_feedbacks_app_status", "app_id", "status"),
+        Index("idx_feedbacks_user", "user_id"),
+    )
+
+
+class EmailLog(Base):
+    """邮件发送记录表"""
+    __tablename__ = "email_logs"
+    
+    id = Column(BIGSERIAL, primary_key=True)
+    to_email = Column(String(255), nullable=False)
+    subject = Column(String(500), nullable=False)
+    content = Column(Text, nullable=False)
+    status = Column(SmallInteger, default=0, comment="0=待发送，1=成功，2=失败")
+    retry_count = Column(BIGSERIAL, default=0)
+    error_message = Column(Text, nullable=True)
+    created_at = Column(TIMESTAMP, default=datetime.utcnow, nullable=False)
+    sent_at = Column(TIMESTAMP, nullable=True)
+
+
+# 添加新的关联关系到已有模型
+EndUser.membership = relationship("UserMembership", back_populates="user", uselist=False, cascade="all, delete-orphan")
+EndUser.forum_posts = relationship("ForumPost", back_populates="user", cascade="all, delete-orphan")
+EndUser.forum_replies = relationship("ForumReply", back_populates="user", cascade="all, delete-orphan")
+EndUser.feedbacks = relationship("Feedback", back_populates="user", cascade="all, delete-orphan")
+EndUser.card_usages = relationship("Card", back_populates="used_by_user")
+
+App.card_batches = relationship("CardBatch", back_populates="app", cascade="all, delete-orphan")
+App.announcements = relationship("Announcement", back_populates="app", cascade="all, delete-orphan")
+App.versions = relationship("AppVersion", back_populates="app", cascade="all, delete-orphan")
+App.splash_configs = relationship("SplashConfig", back_populates="app", cascade="all, delete-orphan")
+App.ads = relationship("Ad", back_populates="app", cascade="all, delete-orphan")
+App.forum_boards = relationship("ForumBoard", back_populates="app", cascade="all, delete-orphan")
+App.feedbacks = relationship("Feedback", back_populates="app", cascade="all, delete-orphan")
