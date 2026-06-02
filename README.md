@@ -85,21 +85,26 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 ```
 app-backend-system/
-├── backend/
+├── backend/                 # FastAPI 后端
 │   ├── app/
-│   │   ├── api/           # API 路由
-│   │   ├── core/          # 核心配置
-│   │   ├── models/        # 数据库模型
-│   │   ├── schemas/       # Pydantic Schema
-│   │   ├── services/      # 业务服务
-│   │   └── main.py        # 应用入口
-│   ├── tests/             # 测试代码
-│   ├── requirements.txt   # Python 依赖
+│   │   ├── api/            # API 路由
+│   │   ├── core/           # 核心配置
+│   │   ├── models/         # 数据库模型
+│   │   ├── schemas/        # Pydantic Schema
+│   │   └── services/       # 业务服务
+│   ├── tests/              # 测试代码
+│   ├── requirements.txt    # Python 依赖
 │   └── Dockerfile
-├── frontend/              # Web 管理控制台
-├── docker/                # Docker 配置
-├── docs/                  # 项目文档
-├── docker-compose.yml     # Docker 编排
+├── frontend/               # Vue3 管理控制台
+│   ├── src/
+│   │   ├── api/           # API 接口
+│   │   ├── views/         # 页面组件
+│   │   ├── router/        # 路由配置
+│   │   └── stores/        # 状态管理
+│   └── package.json
+├── docker/                 # Docker 配置
+├── docs/                   # 项目文档
+├── docker-compose.yml      # Docker 编排
 └── README.md
 ```
 

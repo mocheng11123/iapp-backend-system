@@ -1,0 +1,1 @@
+<template><div><h2>公告管理</h2></div></template>
